@@ -1,3 +1,6 @@
 [submodule "lib/RF24"]
 	path = lib/RF24
 	url = git@github.com:nRF24/RF24.git
+[submodule "lib/WiFiWebServer"]
+	path = lib/WiFiWebServer
+	url = https://github.com/khoih-prog/WiFiWebServer.git

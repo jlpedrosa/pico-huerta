@@ -72,8 +72,10 @@ int main() {
             sensor_type: HUMIDITY, 
             value: voltageValue,
         };
-
-        if (!Send(radio, (void*)&sensor, sizeof(SensorReading))) {
+        void *buffer = &sensor;        
+        int sent = sizeof(SensorReading);
+        
+        if (!Send(radio, (void*)buffer, sent)) {
             printf("Unable to send sensor reading\n");
         } else {
             printf("Sent { device_id:%ju sensor_type:%u value:%f }\n", sensor.device_id, sensor.sensor_type, sensor.value);

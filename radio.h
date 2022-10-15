@@ -11,6 +11,6 @@ struct RadioPinOut {
 RF24* InitRadio(RadioPinOut pinout);
 
 bool Send(RF24 *radio,  const void *payload, uint8_t length);
-int ReceiveSync(RF24 *radio, void *buffer, uint32_t buuferSize);
+uint8_t ReceiveSync(RF24 *radio, void *buffer, uint32_t bufferSize);
 
 

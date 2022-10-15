@@ -70,14 +70,14 @@ int main() {
     RunWebServer(handleRequest);
     
     mutex_init(&my_mutex);
-
-    u_int8_t buffer[1024];
+    int bufferLen = 1024;
+    u_int8_t buffer[bufferLen];
     u_int32_t totalRead = 0;
 
     while (1)
     {
         log("Waiting for messages....\n");
-        auto read = ReceiveSync(radio, buffer, 1024);
+        auto read = ReceiveSync(radio, buffer, bufferLen);
         if (read <= 0) {
             log("error reading from buffer, resetting the whole thing\n");
             totalRead = 0;
@@ -87,7 +87,7 @@ int main() {
 
         if (totalRead == sizeof(SensorReading)) {
             SensorReading newReading = SensorReading{};
-            memcpy(&newReading, buffer,  sizeof(SensorReading));
+            memcpy(&newReading, &buffer,  sizeof(SensorReading));
             log("new reading { device_id:%ju  sensor_type:%d value:%f }\n", newReading.device_id, newReading.sensor_type, newReading.value);
             
             mutex_enter_blocking(&my_mutex);

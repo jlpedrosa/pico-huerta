@@ -59,14 +59,9 @@ foreach(binary IN LISTS projects)
         pico_add_extra_outputs(${binary})
 
         target_compile_definitions(${binary} PRIVATE
-                #LWIP_HTTPD_CGI
-                #LWIP_HTTPD_CGI_SSI
-                SERIAL_DEBUG
+                #SERIAL_DEBUG
                 LWIP_HTTPD_CUSTOM_FILES
-                LWIP_DEBUG
-                LWIP_DBG_TYPES_ON
-                HTTPD_DEBUG
-                HTTPD_DEBUG_TIMING
+                LWIP_DBG_TYPES_ON                
         )
 
 endforeach()

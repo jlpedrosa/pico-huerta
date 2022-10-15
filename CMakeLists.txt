@@ -22,14 +22,13 @@ pico_sdk_init()
 
 set(SOURCE_FILES      
         radio.cpp
-        log.cpp
-        wifi.cpp
+        log.cpp        
         http.cpp
         board.cpp
 )
 
-set(BRAIN_SOURCES ${SOURCE_FILES} power_brain.cpp)
-set(SCOUT_SOURCES ${SOURCE_FILES} plant_scout.cpp)
+set(BRAIN_SOURCES ${SOURCE_FILES} power_brain.cpp wifi.cpp)
+set(SCOUT_SOURCES ${SOURCE_FILES} plant_scout.cpp adc_sensor.cpp)
 
 add_executable(${PICO_BINARY_BRAIN} ${BRAIN_SOURCES})
 add_executable(${PICO_BINARY_SCOUT} ${SCOUT_SOURCES})
@@ -46,8 +45,7 @@ foreach(binary IN LISTS projects)
                 pico_lwip_http                          
                 hardware_spi
                 hardware_adc
-                RF24
-                
+                RF24                
         )
         
         target_compile_definitions(${binary} PRIVATE
@@ -63,6 +61,7 @@ foreach(binary IN LISTS projects)
         target_compile_definitions(${binary} PRIVATE
                 #LWIP_HTTPD_CGI
                 #LWIP_HTTPD_CGI_SSI
+                SERIAL_DEBUG
                 LWIP_HTTPD_CUSTOM_FILES
                 LWIP_DEBUG
                 LWIP_DBG_TYPES_ON

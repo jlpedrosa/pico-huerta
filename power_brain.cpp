@@ -12,6 +12,7 @@
 #include "wifi.h"
 #include "http.h"
 #include "board.h"
+#include "messages.h"
 
 
 const uint LED_PIN = 25;
@@ -21,18 +22,17 @@ const uint SCK_PIN_GPIO = 10;
 const uint TX_PIN_GPIO = 11;
 const uint RX_PIN_GPIO = 12;
 
-RF24 *radio = NULL;
 
 static mutex_t my_mutex;
-static int counter = 1;
+static SensorReading lastreading = SensorReading{0, TEMPERATURE, 0.0 };
 
 int handleRequest(char *buffer) {
-    mutex_enter_blocking(&my_mutex);
-    int localCounter = counter;
+
+    mutex_enter_blocking(&my_mutex);     
+    auto written = sprintf(buffer, " { \"device_id\": %ju  \"sensor_type\": %u \"value\": %f }\n", lastreading.device_id, lastreading.sensor_type, lastreading.value);   
     mutex_exit(&my_mutex);
-    
-    return sprintf(buffer, "{ \"counter\": \"%d\" }", localCounter);
-    return 19;
+
+    return written;
 }
 
 void description() {
@@ -46,15 +46,10 @@ void description() {
 }
 
 
-int main() {
-    stdio_init_all();
-    log("\nStdio initalized\n");
-    
-   
-    sleep_ms(1 * 1000);
-    log("Waiting for serial\n");
-    
-    init_board();    
+int main() {  
+    description();
+
+    InitBoard();    
       
     RadioPinOut picoPinOut = RadioPinOut{
         .CE = CE_PIN_GPIO2,
@@ -63,7 +58,9 @@ int main() {
         .TX = TX_PIN_GPIO,
         .RX = RX_PIN_GPIO,
     };   
-   
+    
+
+    RF24 *radio = NULL;
     radio = InitRadio(picoPinOut);
     if (radio == NULL) {
            return -1;
@@ -71,19 +68,44 @@ int main() {
 
     InitWifi();
     RunWebServer(handleRequest);
-
+    
     mutex_init(&my_mutex);
+
+    u_int8_t buffer[1024];
+    u_int32_t totalRead = 0;
 
     while (1)
     {
-        mutex_enter_blocking(&my_mutex);
-        counter++;
-        mutex_exit(&my_mutex);
+        log("Waiting for messages....\n");
+        auto read = ReceiveSync(radio, buffer, 1024);
+        if (read <= 0) {
+            log("error reading from buffer, resetting the whole thing\n");
+            totalRead = 0;
+            continue;
+        }
+        totalRead += read;
+
+        if (totalRead == sizeof(SensorReading)) {
+            SensorReading newReading = SensorReading{};
+            memcpy(&newReading, buffer,  sizeof(SensorReading));
+            log("new reading { device_id:%ju  sensor_type:%d value:%f }\n", newReading.device_id, newReading.sensor_type, newReading.value);
+            
+            mutex_enter_blocking(&my_mutex);
+            lastreading.device_id = newReading.device_id;
+            lastreading.sensor_type = newReading.sensor_type;
+            lastreading.value = newReading.value;
+            mutex_exit(&my_mutex);
+            
+            totalRead = 0;
+            continue;
+        }
+        
+
+       
+
+       
         sleep_ms(500);        
     }
     
     return 1;
-
-    //SendLoop(radio, GPIO_OUT);
-    //ReceiveLoop(radio, LED_PIN);
 }

@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "build_power_brain",
+			"command": "build",
+			"group": "build",
+			"targets": [
+				"power_brain"
+			],			
+			"problemMatcher": [],
+			"detail": "Builds PowerBrain"
+		},
+		{
+			"type": "cmake",
+			"label": "build_plant_scout",
+			"command": "build",
+			"group": "build",
+			"targets": [
+				"plant_scout"
+			],			
+			"problemMatcher": [],
+			"detail": "Builds PlantSout"	
+		},		
+	]
+}

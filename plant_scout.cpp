@@ -2,13 +2,14 @@
 #include <stdio.h>
 
 #include "hardware/gpio.h"
-#include "hardware/adc.h"
 #include "pico/binary_info.h"
 #include "pico/stdlib.h"
 
 #include "radio.h"
 #include "log.h"
 #include "board.h"
+#include "adc_sensor.h"
+#include "messages.h"
 
 
 const uint LED_PIN = 25;
@@ -18,7 +19,6 @@ const uint SCK_PIN_GPIO = 10;
 const uint TX_PIN_GPIO = 11;
 const uint RX_PIN_GPIO = 12;
 
-RF24 *radio = NULL;
 
 
 
@@ -33,11 +33,19 @@ void description() {
 }
 
 
-int main() {   
+int main() { 
+    
+    RF24 *radio = NULL;
     description();
-    init_board();
+    
+    InitializeACD();
+    uint32_t boardID = InitBoard();
+
 
     log("Initializing Pins\n");
+    
+   // while (1) {log("I have changed"); sleep_ms(1000);}
+
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
     
@@ -52,21 +60,24 @@ int main() {
     radio = InitRadio(picoPinOut);
     if (radio == NULL) {
            return -1;
-    }   
-    
-    adc_init();
- 
-    // Make sure GPIO is high-impedance, no pullups etc
-    adc_gpio_init(26);
-   
-    // Select ADC input 0 (GPIO26)
-    adc_select_input(0);
- 
+    }
+
+    AcdSensor sensor(ACD_GPIO_26); 
     while (1) {
-        // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
-        const float conversion_factor = 3.3f / (1 << 12);
-        uint16_t result = adc_read();
-        printf("Raw value: 0x%03x, voltage: %f V\n", result, result * conversion_factor);
-        sleep_ms(1000);
+        auto voltageValue =  sensor.GetValue();
+
+        printf("Voltage: %f V\n", voltageValue );
+        SensorReading sensor = SensorReading{
+            device_id: boardID,
+            sensor_type: HUMIDITY, 
+            value: voltageValue,
+        };
+
+        if (!Send(radio, (void*)&sensor, sizeof(SensorReading))) {
+            printf("Unable to send sensor reading\n");
+        } else {
+            printf("Sent { device_id:%ju sensor_type:%u value:%f }\n", sensor.device_id, sensor.sensor_type, sensor.value);
+        }        
+        sleep_ms(2000);
     }
 }

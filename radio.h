@@ -10,7 +10,7 @@ struct RadioPinOut {
 
 RF24* InitRadio(RadioPinOut pinout);
 
-void ReceiveLoop(RF24* radio, uint8_t blinkingLed);
-void SendLoop(RF24* radio, uint8_t blinkingLed);
+bool Send(RF24 *radio,  const void *payload, uint8_t length);
+int ReceiveSync(RF24 *radio, void *buffer, uint32_t buuferSize);
 
 

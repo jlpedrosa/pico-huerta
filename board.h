@@ -1,2 +1,4 @@
+#include <stdio.h>
+#include <cstring>
 
-int init_board();
+uint64_t InitBoard();
